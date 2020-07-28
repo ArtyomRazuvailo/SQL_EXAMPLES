@@ -1,3 +1,4 @@
+```sql
 DECLARE @sql NVARCHAR(1000);
 DECLARE @dbName VARCHAR(50);
 DECLARE @tableCursor as CURSOR;
@@ -29,4 +30,5 @@ END PRINT '-----------------'
 FETCH NEXT 
 FROM 
   @tableCursor INTO @dbName;
-End 
+End;
+```
