@@ -1,4 +1,4 @@
-```mssql
+```SQL
 DECLARE @sql NVARCHAR(1000);
 DECLARE @dbName VARCHAR(50);
 DECLARE @tableCursor as CURSOR;
