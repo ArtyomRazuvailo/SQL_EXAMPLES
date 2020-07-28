@@ -12,3 +12,6 @@ FROM msdb..sysjobschedules; --связь джоба с расписанием
 
 SELECT top 100 * - расписания
 FROM msdb.[dbo].[sysschedules];
+
+EXEC master..xp_logininfo 'CORP\Group_Access_SQL_SERVER_NAME', 
+  'members' --группы
