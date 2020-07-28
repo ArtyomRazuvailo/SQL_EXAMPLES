@@ -1,0 +1,88 @@
+USE DB_NAME;
+
+DECLARE @sql NVARCHAR(1000);
+DECLARE @loginName VARCHAR(50);
+DECLARE @tableCursor as CURSOR;
+DECLARE @temporaryTableArrayOfUserLogins table (
+  username varchar(50)
+) 
+------  Сюда вносим логины пользователей для проверки наличия на сервере и создания
+INSERT INTO @temporaryTableArrayOfUserLogins 
+values 
+  ('CORP\razuvaylo_ay'), 
+  ('CORP\razuvaylo_az') 
+------  Сюда вносим логины пользователей для проверки наличия на сервере и создания
+SET 
+  @tableCursor = CURSOR FOR 
+select 
+  * 
+from 
+  @temporaryTableArrayOfUserLogins OPEN @tableCursor;
+FETCH NEXT 
+FROM 
+  @tableCursor INTO @loginName;
+WHILE @@FETCH_STATUS = 0 begin IF NOT EXISTS (
+  SELECT 
+    TOP 1 * 
+  FROM 
+    master.dbo.syslogins 
+  WHERE 
+    name = @loginName
+) begin 
+SET 
+  @SQL = 'CREATE LOGIN [' + @loginName + '] FROM WINDOWS WITH DEFAULT_DATABASE=[master], DEFAULT_LANGUAGE=[русский]' print 'Создана запись ' + @loginName;
+EXEC sp_executeSQL @SQL 
+    END 
+  ELSE BEGIN PRINT 'Пользователь ' + @loginName + ' уже создан на сервере' END 
+  IF NOT EXISTS (
+    SELECT 
+      name 
+    FROM 
+    sys.sysusers 
+  WHERE 
+    name = @loginName
+) begin 
+SET 
+  @SQL = 'CREATE USER [' + @loginName + '] FOR LOGIN [' + @loginName + ']' print 'Создана запись в DB ';
+EXEC sp_executeSQL @SQL END ELSE BEGIN PRINT 'Пользователь ' + @loginName + ' уже создан в базе' END PRINT '-----------------' FETCH NEXT 
+FROM 
+  @tableCursor INTO @loginName;
+End 
+
+
+--------------------------------------Курсор для создания ролей--------------------------------
+DECLARE @sql2 NVARCHAR(1000);
+DECLARE @roleName VARCHAR(50);
+DECLARE @Cursor2 as CURSOR;
+DECLARE @tempTableOfRoles table (
+  rolename varchar(70)
+) INSERT INTO @tempTableOfRoles 
+values 
+  ('districtUsers') 
+SET 
+  @Cursor2 = CURSOR FOR 
+select 
+  * 
+from 
+  @tempTableOfRoles OPEN @Cursor2;
+FETCH NEXT 
+FROM 
+  @Cursor2 INTO @roleName;
+WHILE @@FETCH_STATUS = 0 begin IF NOT EXISTS (
+  SELECT 
+    name 
+  FROM 
+    sys.database_principals 
+  WHERE 
+    type = 'R' 
+    AND name = @roleName
+) begin 
+SET 
+  @SQL2 = 'use comm_log; CREATE ROLE [' + @roleName + '];
+ALTER ROLE [ROLENAME] ADD MEMBER [' + @roleName + '];' print 'Создана роль: ' + @roleName;
+EXEC sp_executeSQL @SQL2 END ELSE BEGIN PRINT 'Роль [' + @roleName + '] уже создана на сервере' END 
+FETCH 
+NEXT 
+FROM 
+  @Cursor2 INTO @roleName;
+End 
