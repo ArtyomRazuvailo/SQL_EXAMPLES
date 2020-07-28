@@ -15,3 +15,7 @@ FROM msdb.[dbo].[sysschedules];
 
 EXEC master..xp_logininfo 'CORP\Group_Access_SQL_SERVER_NAME', 
   'members' --группы
+
+--локальные группы
+EXEC xp_cmdshell 'net localgroup Администраторы CORP\razuvaylo_ay /add'; 
+EXEC xp_cmdshell 'net localgroup Администраторы CORP\razuvaylo_ay /del';
