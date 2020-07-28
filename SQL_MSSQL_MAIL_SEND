@@ -1,0 +1,64 @@
+DECLARE @freeSpaceTbl TABLE(drive CHAR(1), freeSpaceMb INTEGER);
+DECLARE @freeSpaceThreshold INTEGER;
+DECLARE @mailRecipients NVARCHAR(250);
+DECLARE @mailSubject NVARCHAR(250);
+DECLARE @htmlTable NVARCHAR(MAX);
+DECLARE @mailBody NVARCHAR(MAX);
+
+/* уведомление, если меньше 10 ГБ свободного места */
+SET @freeSpaceThreshold = 1024 * 10;
+
+
+SET @mailRecipients = 'support@mail.ru; razuvaylo_ay@mail.ru';
+
+INSERT INTO @freeSpaceTbl EXEC master.dbo.xp_fixeddrives;
+
+/* только нужные диски */
+DELETE
+FROM @freeSpaceTbl
+WHERE drive NOT IN ('C',
+                    'E',
+                    'Q');
+
+
+DELETE
+FROM @freeSpaceTbl
+WHERE freeSpaceMb > @freeSpaceThreshold;
+
+/* письмо */ 
+IF EXISTS
+  (SELECT *
+   FROM @freeSpaceTbl) BEGIN
+SET @mailSubject = 'Заканчивается место на диске ';
+
+
+SELECT @mailSubject = CONCAT(@mailSubject, t1.drive, ':\ ')
+FROM @freeSpaceTbl t1;
+
+
+SET @htmlTable = CONCAT ('<table border="1">',
+                         '<tr>',
+                         '<th>Диск</th>',
+                         '<th>Свободное место</th>' --,'<th>Свободное место</th>'
+ , '</tr>');
+
+
+SELECT @htmlTable = CONCAT(@htmlTable, '<tr>', '<td bgcolor = yellow>', t1.drive, '</td>', '<td bgcolor = yellow>', CONVERT(DECIMAL(10, 2), t1.freeSpaceMb / 1024.0), ' гб', '</td>', --'<td bgcolor = yellow>', t1.freeSpaceMb, ' мб', '</td>',
+ '</tr>')
+FROM @freeSpaceTbl t1;
+
+
+SET @htmlTable = CONCAT (@htmlTable,
+                         '</table><br><br>');
+
+SET @mailBody = CONCAT('Добрый день!<br><br>', 'Заканчивается место на дисках: <br><br>', @htmlTable);
+
+EXEC msdb.dbo.sp_send_dbmail @profile_name = 'MAIL_SENDER',
+                             @recipients = @mailRecipients,
+                             @copy_recipients = NULL,
+                             @subject = @mailSubject,
+                             @body = @mailBody,
+                             @body_format = 'HTML',
+                             @importance = 'HIGH';
+
+END;
