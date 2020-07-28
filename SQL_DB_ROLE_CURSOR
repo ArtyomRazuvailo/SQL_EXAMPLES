@@ -1,0 +1,16 @@
+--Выбирает во временную таблицу все базы данных (кроме master и msdb), в которых есть нужная нам роль @rolename (название роли берем во второй столбец для наглядности)
+  
+CREATE TABLE #tempTableofDB1 (dbname varchar(50),rolename varchar(50));
+
+EXEC sp_MSForEachDB '
+Use [?];
+DECLARE @rolename  VARCHAR(50) = ''toolSupplierSchedule'';  
+INSERT INTO #tempTableofDB1
+select top 1
+ db_name() dbname,
+ rp.[name] as rolename
+from [sys].[database_role_members] drm
+inner join [sys].[database_principals] rp on rp.principal_id = drm.role_principal_id
+where rp.[name] = @rolename';
+
+select * from #tempTableofDB1;
