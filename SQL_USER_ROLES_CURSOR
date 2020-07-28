@@ -1,0 +1,32 @@
+CREATE TABLE #t1   (database_role varchar(50),database_userl varchar(50), dbname varchar(50));
+
+EXEC sp_MSForEachDB '
+Use [?];
+DECLARE @name  VARCHAR(50) = ''Corp\user11'';
+WITH RoleMembers (member_principal_id, role_principal_id) 
+AS 
+(
+  SELECT 
+   rm1.member_principal_id, 
+   rm1.role_principal_id
+  FROM sys.database_role_members rm1 (NOLOCK)
+   UNION ALL
+  SELECT 
+   d.member_principal_id, 
+   rm.role_principal_id
+  FROM sys.database_role_members rm (NOLOCK)
+   INNER JOIN RoleMembers AS d 
+   ON rm.member_principal_id = d.role_principal_id
+)
+Insert into #t1
+select distinct rp.name as database_role, mp.name as database_userl, ''?''
+from RoleMembers drm
+  join sys.database_principals rp on (drm.role_principal_id = rp.principal_id)
+  join (select * from sys.database_principals where name = @name) mp on (drm.member_principal_id = mp.principal_id)
+' 
+
+CREATE LOGIN [CORP\] 
+FROM 
+  WINDOWS WITH DEFAULT_DATABASE = [master], 
+  DEFAULT_LANGUAGE = [русский] USE [] CREATE USER [CORP\] FOR LOGIN [CORP\] ALTER ROLE [] 
+ADD MEMBER [CORP\user_name2] 
