@@ -1,0 +1,14 @@
+SELECT top 100 * --журнал джобов
+FROM msdb..sysjobhistory;
+
+SELECT top 100 * --справочник
+FROM msdb..sysjobs;
+
+SELECT top 100 * --текущее состояние
+FROM msdb..sysjobsteps;
+
+SELECT top 100 *
+FROM msdb..sysjobschedules; --связь джоба с расписанием
+
+SELECT top 100 * - расписания
+FROM msdb.[dbo].[sysschedules];
