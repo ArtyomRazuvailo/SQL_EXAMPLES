@@ -1,0 +1,77 @@
+--Перевод кириллицы в латиницу
+ DECLARE @str varchar(4000) = 'Сектор контроля расчетных параметров АЗ ТТ' DECLARE @str_lat varchar(8000) DECLARE @i int, @ch varchar(2)
+SET @i = 1
+SET @str_lat = '' WHILE @i <= len(@str) BEGIN
+SET @ch = substring(@str, @i, 1) IF @ch COLLATE Cyrillic_General_CS_AS = 'А'
+SET @ch = 'A' IF @ch COLLATE Cyrillic_General_CS_AS = 'а'
+SET @ch = 'a' IF @ch COLLATE Cyrillic_General_CS_AS = 'Б'
+SET @ch = 'B' IF @ch COLLATE Cyrillic_General_CS_AS = 'б'
+SET @ch = 'b' IF @ch COLLATE Cyrillic_General_CS_AS = 'В'
+SET @ch = 'V' IF @ch COLLATE Cyrillic_General_CS_AS = 'в'
+SET @ch = 'v' IF @ch COLLATE Cyrillic_General_CS_AS = 'Г'
+SET @ch = 'G' IF @ch COLLATE Cyrillic_General_CS_AS = 'г'
+SET @ch = 'g' IF @ch COLLATE Cyrillic_General_CS_AS = 'Д'
+SET @ch = 'D' IF @ch COLLATE Cyrillic_General_CS_AS = 'д'
+SET @ch = 'd' IF (@ch COLLATE Cyrillic_General_CS_AS = 'Е')
+OR (@ch COLLATE Cyrillic_General_CS_AS = 'Ё')
+SET @ch = 'E' IF (@ch COLLATE Cyrillic_General_CS_AS = 'е')
+OR (@ch COLLATE Cyrillic_General_CS_AS = 'ё')
+SET @ch = 'e' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ж'
+SET @ch = 'ZH' IF @ch COLLATE Cyrillic_General_CS_AS = 'ж'
+SET @ch = 'zh' IF @ch COLLATE Cyrillic_General_CS_AS = 'З'
+SET @ch = 'Z' IF @ch COLLATE Cyrillic_General_CS_AS = 'з'
+SET @ch = 'z' IF @ch COLLATE Cyrillic_General_CS_AS = 'И'
+SET @ch = 'I' IF @ch COLLATE Cyrillic_General_CS_AS = 'и'
+SET @ch = 'i' IF @ch COLLATE Cyrillic_General_CS_AS = 'Й'
+SET @ch = 'Y' IF @ch COLLATE Cyrillic_General_CS_AS = 'й'
+SET @ch = 'y' IF @ch COLLATE Cyrillic_General_CS_AS = 'К'
+SET @ch = 'K' IF @ch COLLATE Cyrillic_General_CS_AS = 'к'
+SET @ch = 'k' IF @ch COLLATE Cyrillic_General_CS_AS = 'Л'
+SET @ch = 'L' IF @ch COLLATE Cyrillic_General_CS_AS = 'л'
+SET @ch = 'l' IF @ch COLLATE Cyrillic_General_CS_AS = 'М'
+SET @ch = 'M' IF @ch COLLATE Cyrillic_General_CS_AS = 'м'
+SET @ch = 'm' IF @ch COLLATE Cyrillic_General_CS_AS = 'Н'
+SET @ch = 'N' IF @ch COLLATE Cyrillic_General_CS_AS = 'н'
+SET @ch = 'n' IF @ch COLLATE Cyrillic_General_CS_AS = 'О'
+SET @ch = 'O' IF @ch COLLATE Cyrillic_General_CS_AS = 'о'
+SET @ch = 'o' IF @ch COLLATE Cyrillic_General_CS_AS = 'П'
+SET @ch = 'P' IF @ch COLLATE Cyrillic_General_CS_AS = 'п'
+SET @ch = 'p' IF @ch COLLATE Cyrillic_General_CS_AS = 'Р'
+SET @ch = 'R' IF @ch COLLATE Cyrillic_General_CS_AS = 'р'
+SET @ch = 'r' IF @ch COLLATE Cyrillic_General_CS_AS = 'С'
+SET @ch = 'S' IF @ch COLLATE Cyrillic_General_CS_AS = 'с'
+SET @ch = 's' IF @ch COLLATE Cyrillic_General_CS_AS = 'Т'
+SET @ch = 'T' IF @ch COLLATE Cyrillic_General_CS_AS = 'т'
+SET @ch = 't' IF @ch COLLATE Cyrillic_General_CS_AS = 'У'
+SET @ch = 'U' IF @ch COLLATE Cyrillic_General_CS_AS = 'у'
+SET @ch = 'u' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ф'
+SET @ch = 'F' IF @ch COLLATE Cyrillic_General_CS_AS = 'ф'
+SET @ch = 'f' IF @ch COLLATE Cyrillic_General_CS_AS = 'Х'
+SET @ch = 'KH' IF @ch COLLATE Cyrillic_General_CS_AS = 'х'
+SET @ch = 'kh' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ц'
+SET @ch = 'C' IF @ch COLLATE Cyrillic_General_CS_AS = 'ц'
+SET @ch = 'c' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ч'
+SET @ch = 'CH' IF @ch COLLATE Cyrillic_General_CS_AS = 'ч'
+SET @ch = 'ch' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ш'
+SET @ch = 'SH' IF @ch COLLATE Cyrillic_General_CS_AS = 'ш'
+SET @ch = 'sh' IF @ch COLLATE Cyrillic_General_CS_AS = 'Щ'
+SET @ch = 'SHCH' IF @ch COLLATE Cyrillic_General_CS_AS = 'щ'
+SET @ch = 'shch' IF (@ch COLLATE Cyrillic_General_CS_AS = 'ъ') OR (@ch COLLATE Cyrillic_General_CS_AS = 'Ъ') OR (@ch COLLATE Cyrillic_General_CS_AS = 'ь') OR (@ch COLLATE Cyrillic_General_CS_AS = 'Ь')
+SET @ch = '' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ы'
+SET @ch = 'Y' IF @ch COLLATE Cyrillic_General_CS_AS = 'ы'
+SET @ch = 'y' IF @ch COLLATE Cyrillic_General_CS_AS = 'Э'
+SET @ch = 'E' IF @ch COLLATE Cyrillic_General_CS_AS = 'э'
+SET @ch = 'e' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ю'
+SET @ch = 'YU' IF @ch COLLATE Cyrillic_General_CS_AS = 'ю'
+SET @ch = 'yu' IF @ch COLLATE Cyrillic_General_CS_AS = 'Я'
+SET @ch = 'YA' IF @ch COLLATE Cyrillic_General_CS_AS = 'я'
+SET @ch = 'ya' ----
+ IF @ch COLLATE Cyrillic_General_CS_AS = ','
+SET @ch = '' IF @ch COLLATE Cyrillic_General_CS_AS = ':'
+SET @ch = '' IF @ch COLLATE Cyrillic_General_CS_AS = '-'
+SET @ch = ''
+SET @str_lat = @str_lat + @ch
+SET @i = @i + 1 END ;
+
+
+SELECT @str_lat;
