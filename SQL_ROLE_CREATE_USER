@@ -1,0 +1,59 @@
+--Проверяем наличие ролей в системных таблицах(указываем название роли второй раз, в эту переменную)
+  
+DECLARE @search_rolename VARCHAR(50) = 'sektorNAME';
+USE [msdb];
+IF EXISTS (
+  SELECT 
+    name 
+  FROM 
+    sys.database_principals 
+  WHERE 
+    type = 'R' 
+    AND name = @search_rolename
+) begin INSERT INTO #tempTableofDB values ('msdb', @search_rolename)
+End USE [master];
+IF EXISTS (
+  SELECT 
+    name 
+  FROM 
+    sys.database_principals 
+  WHERE 
+    type = 'R' 
+    AND name = @search_rolename
+) begin INSERT INTO #tempTableofDB values ('master', @search_rolename)
+End 
+
+--Курсором выдаем права доступа на базы, в которых есть эта роль
+DECLARE @sql NVARCHAR(1000);
+DECLARE @dbName VARCHAR(50);
+DECLARE @tableCursor as CURSOR;
+DECLARE @user_name VARCHAR(50) = 'CORP\USER_NAME111111';--указываем конкретного пользователя
+SET 
+  @tableCursor = CURSOR FOR 
+select 
+  dbname 
+from 
+  #tempTableofDB
+  OPEN @tableCursor;
+FETCH NEXT 
+FROM 
+  @tableCursor INTO @dbname;
+WHILE @@FETCH_STATUS = 0 begin 
+SET 
+  @SQL = 'USE [' + @dbname + ']; 
+          IF NOT EXISTS (SELECT name FROM sys.sysusers WHERE name= [' + @user_name + '])  
+          begin
+            CREATE USER [' + @user_name + '] FOR LOGIN [' + @user_name + ']; 
+          end; 
+          ELSE 
+            BEGIN print ''Роль уже создана в [''' + @dbname + ''']''; 
+            END;
+
+          ALTER ROLE [' + @search_rolename + '] ADD MEMBER [' + @user_name + '];
+            ' print @sql print 'Создана запись в ' + @dbname;
+-- EXEC sp_executeSQL @SQL 
+print '--------------------------------------------------';
+FETCH NEXT 
+FROM 
+  @tableCursor INTO @dbName;
+End 
