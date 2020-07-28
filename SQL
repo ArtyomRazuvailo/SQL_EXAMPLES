@@ -1,0 +1,516 @@
+DECLARE @sql NVARCHAR(1000);
+
+DECLARE @dbName VARCHAR(50);
+
+DECLARE @tableCursor AS
+CURSOR;
+
+DECLARE @temporaryTableDB TABLE (dbname varchar(50))
+INSERT INTO @temporaryTableDB
+VALUES ('PBU'),
+       ('PROD'),
+       ('REPORTS'),
+       ('SOURCES'),
+       ('SPIKE'),
+       ('TOOLS')
+SET @tableCursor =
+CURSOR
+FOR
+SELECT *
+FROM @temporaryTableDB OPEN @tableCursor;
+
+FETCH NEXT
+FROM @tableCursor INTO @dbName;
+
+WHILE @@FETCH_STATUS = 0 BEGIN BEGIN
+SET @SQL = 'USE [' + @dbName + ']; 
+
+CREATE ROLE [sektorPoRaboteSKonditerskimiIzdeliyamiIOsnovnymiProduktami];
+ALTER ROLE [sektorPoRaboteSKonditerskimiIzdeliyamiIOsnovnymiProduktami] ADD MEMBER [CORP\pavlov_ma];
+ALTER ROLE [transactionTool] ADD MEMBER [sektorPoRaboteSKonditerskimiIzdeliyamiIOsnovnymiProduktami];
+' PRINT @SQL;
+
+PRINT 'Создана запись в ' + @dbName;
+
+--EXEC sp_executeSQL @SQL
+END PRINT '-----------------' FETCH NEXT
+FROM @tableCursor INTO @dbName;
+
+END ---------------------------------------------------------
+
+SELECT *
+FROM test.dbo.emp;
+
+
+SELECT *
+FROM test.dbo.dept
+SELECT *
+FROM test.dbo.SALGRADE --1
+
+SELECT a.ENAME,
+       a.DEPTNO
+FROM test.dbo.emp a
+JOIN test.dbo.dept b ON a.deptno = b.deptno --2
+
+SELECT a.ENAME,
+       (SAL * 12 + coalesce(comm, 0)) AS 'Total Sal'
+FROM test.dbo.emp a --3
+
+SELECT ename,
+       job,
+       sal
+FROM test.dbo.emp a
+WHERE comm IS NULL --4
+
+  SELECT sum(sal + coalesce(comm, 0))/ count(1) AS 'Средняя зарплата',
+            count(1) AS 'Количество сотрудников'
+  FROM test.dbo.emp a WHERE DEPTNO = 20 --5
+
+  SELECT *
+  FROM
+    (SELECT deptno,
+            sum(1) AS 'Количество сотрудников'
+     FROM test.dbo.emp
+     GROUP BY deptno) z WHERE [Количество сотрудников] > 3 --6
+
+  SELECT ename,
+         dname,
+         LOC,
+         sal,
+         CASE
+             WHEN sal > 700
+                  AND sal <= 1200 THEN 1
+             WHEN sal > 1201
+                  AND sal <= 1400 THEN 2
+             WHEN sal > 1401
+                  AND sal <= 2000 THEN 3
+             WHEN sal > 2001
+                  AND sal <= 3000 THEN 4
+             WHEN sal > 3001
+                  AND sal <= 9999 THEN 5
+         END AS [GRADE]
+  FROM test.dbo.emp a
+  JOIN test.dbo.dept b ON a.deptno = b.deptno
+ORDER BY sal --7
+
+SELECT a.ename
+FROM test.dbo.emp a
+LEFT JOIN
+  (SELECT *
+   FROM test.dbo.emp
+   WHERE job = 'MANAGER' ) b ON a.MGR = b.EMPNO
+WHERE a.sal > b.sal --8
+
+  SELECT dname,
+         count(empno) AS 'Сотрудники'
+  FROM test.dbo.emp e
+  RIGHT JOIN test.dbo.dept d ON e.deptno = d.DEPTNO
+GROUP BY dname
+ORDER BY [Сотрудники] DESC -----------------
+ ---------------------------------------------------------
+ --@magnit.ru,
+
+CREATE TABLE #t1 (database_role varchar(50),
+                                database_userl varchar(50),
+                                               dbname varchar(50));
+
+EXEC sp_MSForEachDB '
+Use [?];
+DECLARE @name  VARCHAR(50) = ''Corp\sertakov_vi'';
+WITH RoleMembers (member_principal_id, role_principal_id) 
+AS 
+(
+  SELECT 
+   rm1.member_principal_id, 
+   rm1.role_principal_id
+  FROM sys.database_role_members rm1 (NOLOCK)
+   UNION ALL
+  SELECT 
+   d.member_principal_id, 
+   rm.role_principal_id
+  FROM sys.database_role_members rm (NOLOCK)
+   INNER JOIN RoleMembers AS d 
+   ON rm.member_principal_id = d.role_principal_id
+)
+Insert into #t1
+select distinct rp.name as database_role, mp.name as database_userl, ''?''
+from RoleMembers drm
+  join sys.database_principals rp on (drm.role_principal_id = rp.principal_id)
+  join (select * from sys.database_principals where name = @name) mp on (drm.member_principal_id = mp.principal_id)
+'
+CREATE LOGIN [CORP\]
+FROM WINDOWS WITH DEFAULT_DATABASE = [master],
+                  DEFAULT_LANGUAGE = [русский] USE []
+CREATE USER [CORP\]
+FOR LOGIN [CORP\]
+ALTER ROLE [] ADD MEMBER [CORP\karnach_as] -----------------------------
+
+SELECT art.CODE,
+       vrc.RC_CNTR_CODE,
+       aut.CNTR_SET_NAME
+FROM SOURCES.dbo.V_AUT_ARTICLE AS aut
+INNER JOIN SOURCES.dbo.V_ART AS art ON aut.ART_ID = art.ART_ID
+INNER JOIN SOURCES.dbo.V_RC AS vrc ON aut.RC_CNTR_ID = vrc.RC_CNTR_ID
+WHERE 1 = 1
+  AND art.CODE = '1000069853' --Код ТП
+
+  AND vrc.RC_CNTR_CODE = '710000' --Код РЦ
+ --------------------------------------
+
+  CREATE TABLE #actions(tdDcId INT, tdskuid INT)
+  INSERT INTO #actions
+VALUES
+SELECT *
+FROM #actions
+SELECT *
+FROM prod.source.vDistributionCenterAssortment a
+JOIN #actions b ON a.tdDcId=b.tdDcId
+AND b.tdskuid=a.tdskuid
+WHERE isAoCamera = 0 /*  where 1=1
+       and tdDcId = 27089
+  and tdskuid = 16512206
+  */ isAZ -------------------------------
+
+  CREATE TABLE #tempTableofDB1 (dbname varchar(50),
+                                       rolename varchar(50));
+
+--Выбирает во временную таблицу все базы данных (кроме master и msdb), в которых есть нужная нам роль @rolename
+ --(название роли берем во второй столбец без надобности - на всякий случай)
+ EXEC sp_MSForEachDB '
+Use [?];
+DECLARE @rolename  VARCHAR(50) = ''toolSupplierSchedule'';  
+INSERT INTO #tempTableofDB1
+select top 1
+ db_name() dbname,
+ rp.[name] as rolename
+from [sys].[database_role_members] drm
+inner join [sys].[database_principals] rp on rp.principal_id = drm.role_principal_id
+where rp.[name] = @rolename 
+'
+SELECT *
+FROM #tempTableofDB1 --Проверяем наличие ролей в системных таблицах(указываем название роли второй раз, в эту переменную)
+ DECLARE @search_rolename VARCHAR(50) = 'sektorMetodologiiAvtozakazaRC';
+
+USE [msdb];
+
+IF EXISTS
+  (SELECT name
+   FROM sys.database_principals
+   WHERE TYPE = 'R'
+     AND name = @search_rolename ) BEGIN
+INSERT INTO #tempTableofDB
+VALUES ('msdb',
+        @search_rolename) END USE [master];
+
+IF EXISTS
+  (SELECT name
+   FROM sys.database_principals
+   WHERE TYPE = 'R'
+     AND name = @search_rolename ) BEGIN
+INSERT INTO #tempTableofDB
+VALUES ('master',
+        @search_rolename) END --select * from #tempTableofDB
+--DELETE from #tempTableofDB
+--Курсором выдаем права доступа на базы, в которых есть эта роль
+DECLARE @sql NVARCHAR(1000);
+
+DECLARE @dbName VARCHAR(50);
+
+DECLARE @tableCursor AS
+CURSOR;
+
+DECLARE @user_name VARCHAR(50) = 'CORP\guseva_dn';
+
+--указываем конкретного пользователя
+SET @tableCursor =
+CURSOR
+FOR
+SELECT dbname
+FROM #tempTableofDB OPEN @tableCursor;
+
+FETCH NEXT
+FROM @tableCursor INTO @dbname;
+
+WHILE @@FETCH_STATUS = 0 BEGIN
+SET @SQL = 'USE [' + @dbname + ']; 
+          IF NOT EXISTS (SELECT name FROM sys.sysusers WHERE name= [' + @user_name + '])  
+          begin
+            CREATE USER [' + @user_name + '] FOR LOGIN [' + @user_name + ']; 
+          end; 
+          ELSE 
+            BEGIN print ''Роль уже создана в [''' + @dbname + ''']''; 
+            END;
+
+          ALTER ROLE [' + @search_rolename + '] ADD MEMBER [' + @user_name + '];
+            ' PRINT @sql PRINT 'Создана запись в ' + @dbname;
+
+-- EXEC sp_executeSQL @SQL
+PRINT '--------------------------------------------------';
+
+FETCH NEXT
+FROM @tableCursor INTO @dbName;
+
+END ------------------------------------------------
+USE SOURCES;
+
+WITH rolemembers (member_principal_id, role_principal_id) AS
+  (SELECT rm1.member_principal_id,
+          rm1.role_principal_id
+   FROM sys.database_role_members rm1
+   UNION ALL SELECT d.member_principal_id,
+                    rm.role_principal_id
+   FROM sys.database_role_members rm
+   INNER JOIN roleMembers AS d ON rm.member_principal_id = d.role_principal_id)
+SELECT DISTINCT rp.[name] AS database_role,
+                mp.[name] AS database_user INTO #temp
+FROM rolemembers AS drm
+JOIN sys.database_principals rp ON drm.role_principal_id = rp.principal_id
+JOIN sys.database_principals mp ON drm.member_principal_id = mp.principal_id --where rp.[name] = 'liteLog'
+ORDER BY rp.name
+SELECT *
+FROM #temp
+WHERE database_role != 'litelog'
+  AND database_user IN ('CORP\kisele',)------------------------------------------------------------------
+ DECLARE @str varchar(4000) = 'Сектор контроля расчетных параметров АЗ ТТ' DECLARE @str_lat varchar(8000) DECLARE @i int, @ch varchar(2)
+  SET @i = 1
+  SET @str_lat = '' WHILE @i <= len(@str) BEGIN
+  SET @ch = substring(@str, @i, 1) IF @ch COLLATE Cyrillic_General_CS_AS = 'А'
+  SET @ch = 'A' IF @ch COLLATE Cyrillic_General_CS_AS = 'а'
+  SET @ch = 'a' IF @ch COLLATE Cyrillic_General_CS_AS = 'Б'
+  SET @ch = 'B' IF @ch COLLATE Cyrillic_General_CS_AS = 'б'
+  SET @ch = 'b' IF @ch COLLATE Cyrillic_General_CS_AS = 'В'
+  SET @ch = 'V' IF @ch COLLATE Cyrillic_General_CS_AS = 'в'
+  SET @ch = 'v' IF @ch COLLATE Cyrillic_General_CS_AS = 'Г'
+  SET @ch = 'G' IF @ch COLLATE Cyrillic_General_CS_AS = 'г'
+  SET @ch = 'g' IF @ch COLLATE Cyrillic_General_CS_AS = 'Д'
+  SET @ch = 'D' IF @ch COLLATE Cyrillic_General_CS_AS = 'д'
+  SET @ch = 'd' IF (@ch COLLATE Cyrillic_General_CS_AS = 'Е')
+  OR (@ch COLLATE Cyrillic_General_CS_AS = 'Ё')
+  SET @ch = 'E' IF (@ch COLLATE Cyrillic_General_CS_AS = 'е')
+  OR (@ch COLLATE Cyrillic_General_CS_AS = 'ё')
+  SET @ch = 'e' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ж'
+  SET @ch = 'ZH' IF @ch COLLATE Cyrillic_General_CS_AS = 'ж'
+  SET @ch = 'zh' IF @ch COLLATE Cyrillic_General_CS_AS = 'З'
+  SET @ch = 'Z' IF @ch COLLATE Cyrillic_General_CS_AS = 'з'
+  SET @ch = 'z' IF @ch COLLATE Cyrillic_General_CS_AS = 'И'
+  SET @ch = 'I' IF @ch COLLATE Cyrillic_General_CS_AS = 'и'
+  SET @ch = 'i' IF @ch COLLATE Cyrillic_General_CS_AS = 'Й'
+  SET @ch = 'Y' IF @ch COLLATE Cyrillic_General_CS_AS = 'й'
+  SET @ch = 'y' IF @ch COLLATE Cyrillic_General_CS_AS = 'К'
+  SET @ch = 'K' IF @ch COLLATE Cyrillic_General_CS_AS = 'к'
+  SET @ch = 'k' IF @ch COLLATE Cyrillic_General_CS_AS = 'Л'
+  SET @ch = 'L' IF @ch COLLATE Cyrillic_General_CS_AS = 'л'
+  SET @ch = 'l' IF @ch COLLATE Cyrillic_General_CS_AS = 'М'
+  SET @ch = 'M' IF @ch COLLATE Cyrillic_General_CS_AS = 'м'
+  SET @ch = 'm' IF @ch COLLATE Cyrillic_General_CS_AS = 'Н'
+  SET @ch = 'N' IF @ch COLLATE Cyrillic_General_CS_AS = 'н'
+  SET @ch = 'n' IF @ch COLLATE Cyrillic_General_CS_AS = 'О'
+  SET @ch = 'O' IF @ch COLLATE Cyrillic_General_CS_AS = 'о'
+  SET @ch = 'o' IF @ch COLLATE Cyrillic_General_CS_AS = 'П'
+  SET @ch = 'P' IF @ch COLLATE Cyrillic_General_CS_AS = 'п'
+  SET @ch = 'p' IF @ch COLLATE Cyrillic_General_CS_AS = 'Р'
+  SET @ch = 'R' IF @ch COLLATE Cyrillic_General_CS_AS = 'р'
+  SET @ch = 'r' IF @ch COLLATE Cyrillic_General_CS_AS = 'С'
+  SET @ch = 'S' IF @ch COLLATE Cyrillic_General_CS_AS = 'с'
+  SET @ch = 's' IF @ch COLLATE Cyrillic_General_CS_AS = 'Т'
+  SET @ch = 'T' IF @ch COLLATE Cyrillic_General_CS_AS = 'т'
+  SET @ch = 't' IF @ch COLLATE Cyrillic_General_CS_AS = 'У'
+  SET @ch = 'U' IF @ch COLLATE Cyrillic_General_CS_AS = 'у'
+  SET @ch = 'u' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ф'
+  SET @ch = 'F' IF @ch COLLATE Cyrillic_General_CS_AS = 'ф'
+  SET @ch = 'f' IF @ch COLLATE Cyrillic_General_CS_AS = 'Х'
+  SET @ch = 'KH' IF @ch COLLATE Cyrillic_General_CS_AS = 'х'
+  SET @ch = 'kh' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ц'
+  SET @ch = 'C' IF @ch COLLATE Cyrillic_General_CS_AS = 'ц'
+  SET @ch = 'c' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ч'
+  SET @ch = 'CH' IF @ch COLLATE Cyrillic_General_CS_AS = 'ч'
+  SET @ch = 'ch' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ш'
+  SET @ch = 'SH' IF @ch COLLATE Cyrillic_General_CS_AS = 'ш'
+  SET @ch = 'sh' IF @ch COLLATE Cyrillic_General_CS_AS = 'Щ'
+  SET @ch = 'SHCH' IF @ch COLLATE Cyrillic_General_CS_AS = 'щ'
+  SET @ch = 'shch' IF (@ch COLLATE Cyrillic_General_CS_AS = 'ъ')
+  OR (@ch COLLATE Cyrillic_General_CS_AS = 'Ъ')
+  OR (@ch COLLATE Cyrillic_General_CS_AS = 'ь')
+  OR (@ch COLLATE Cyrillic_General_CS_AS = 'Ь')
+  SET @ch = '' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ы'
+  SET @ch = 'Y' IF @ch COLLATE Cyrillic_General_CS_AS = 'ы'
+  SET @ch = 'y' IF @ch COLLATE Cyrillic_General_CS_AS = 'Э'
+  SET @ch = 'E' IF @ch COLLATE Cyrillic_General_CS_AS = 'э'
+  SET @ch = 'e' IF @ch COLLATE Cyrillic_General_CS_AS = 'Ю'
+  SET @ch = 'YU' IF @ch COLLATE Cyrillic_General_CS_AS = 'ю'
+  SET @ch = 'yu' IF @ch COLLATE Cyrillic_General_CS_AS = 'Я'
+  SET @ch = 'YA' IF @ch COLLATE Cyrillic_General_CS_AS = 'я'
+  SET @ch = 'ya' ----
+ IF @ch COLLATE Cyrillic_General_CS_AS = ','
+  SET @ch = '' IF @ch COLLATE Cyrillic_General_CS_AS = ':'
+  SET @ch = '' IF @ch COLLATE Cyrillic_General_CS_AS = '-'
+  SET @ch = ''
+  SET @str_lat = @str_lat + @ch
+  SET @i = @i + 1 END
+  SELECT @str_lat ----------------------------------------------------------------------------------------------------------------------------
+ DECLARE @freeSpaceTbl TABLE(drive CHAR(1), freeSpaceMb INTEGER);
+
+DECLARE @freeSpaceThreshold INTEGER;
+
+DECLARE @mailRecipients NVARCHAR(250);
+
+DECLARE @mailSubject NVARCHAR(250);
+
+DECLARE @htmlTable NVARCHAR(MAX);
+
+DECLARE @mailBody NVARCHAR(MAX);
+
+/* уведомление, если меньше 10 ГБ свободного места */
+SET @freeSpaceThreshold = 1024 * 10;
+
+
+SET @mailRecipients = 'support_az@magnit.ru; sergeev_o_v@magnit.ru';
+
+
+INSERT INTO @freeSpaceTbl EXEC master.dbo.xp_fixeddrives;
+
+/* только нужные диски */
+DELETE
+FROM @freeSpaceTbl
+WHERE drive NOT IN ('C',
+                    'E',
+                    'Q');
+
+
+DELETE
+FROM @freeSpaceTbl
+WHERE freeSpaceMb > @freeSpaceThreshold;
+
+/* письмо */ IF EXISTS
+  (SELECT *
+   FROM @freeSpaceTbl) BEGIN
+SET @mailSubject = 'SAZ. Заканчивается место на диске ';
+
+
+SELECT @mailSubject = CONCAT(@mailSubject, t1.drive, ':\ ')
+FROM @freeSpaceTbl t1;
+
+
+SET @htmlTable = CONCAT ('<table border="1">',
+                         '<tr>',
+                         '<th>Диск</th>',
+                         '<th>Свободное место</th>' --,'<th>Свободное место</th>'
+ , '</tr>');
+
+
+SELECT @htmlTable = CONCAT(@htmlTable, '<tr>', '<td bgcolor = yellow>', t1.drive, '</td>', '<td bgcolor = yellow>', CONVERT(DECIMAL(10, 2), t1.freeSpaceMb / 1024.0), ' гб', '</td>', --'<td bgcolor = yellow>', t1.freeSpaceMb, ' мб', '</td>',
+ '</tr>')
+FROM @freeSpaceTbl t1;
+
+
+SET @htmlTable = CONCAT (@htmlTable,
+                         '</table><br><br>');
+
+
+SET @mailBody = CONCAT('Добрый день!<br><br>', 'Заканчивается место на дисках: <br><br>', @htmlTable);
+
+EXEC msdb.dbo.sp_send_dbmail @profile_name = 'SAZ_Bombina',
+                             @recipients = @mailRecipients,
+                             @copy_recipients = NULL,
+                             @subject = @mailSubject,
+                             @body = @mailBody,
+                             @body_format = 'HTML',
+                             @importance = 'HIGH';
+
+END;
+
+------------------------------------------------------------------------------------------------------------------------
+
+SELECT (physical_memory_in_use_kb / 1024) AS Memory_usedby_Sqlserver_MB,
+       (locked_page_allocations_kb / 1024) AS Locked_pages_used_Sqlserver_MB,
+       (total_virtual_address_space_kb / 1024) AS Total_VirtualAdressSpace_in_MB,
+       process_physical_memory_low,
+       process_virtual_memory_low
+FROM sys.dm_os_process_memory;
+
+---------------------------------------------------------------------------------------------------------------------
+
+SELECT top 100 * --журнал джобов
+FROM msdb..sysjobhistory
+SELECT top 100 * --справочник
+FROM msdb..sysjobs
+SELECT top 100 * --текущее состояние
+FROM msdb..sysjobsteps
+SELECT top 100 *
+FROM msdb..sysjobschedules –связь джоба с расписанием
+SELECT top 100 * - расписания
+FROM msdb.[dbo].[sysschedules] -------------------------------------------------------------------------------
+ EXEC master..xp_logininfo 'CORP\Group_Access_SQL_AZRC_App_IDFO',
+                           'members' ----------------------------------------------------------------------------------------------
+ USE COMM_LOG;
+
+DECLARE @sql NVARCHAR(1000);
+
+DECLARE @loginName VARCHAR(50);
+
+DECLARE @tableCursor AS
+CURSOR;
+
+DECLARE @temporaryTableArrayOfUserLogins TABLE (username varchar(50) )------  Сюда вносим логины пользователей для проверки наличия на сервере и создания
+
+INSERT INTO @temporaryTableArrayOfUserLogins
+VALUES ('CORP\belyaevskaya'),
+       ('CORP\akbarova')------  Сюда вносим логины пользователей для проверки наличия на сервере и создания
+SET @tableCursor =
+CURSOR
+FOR
+SELECT *
+FROM @temporaryTableArrayOfUserLogins OPEN @tableCursor;
+
+FETCH NEXT
+FROM @tableCursor INTO @loginName;
+
+WHILE @@FETCH_STATUS = 0 BEGIN IF NOT EXISTS
+  (SELECT TOP 1 *
+   FROM master.dbo.syslogins
+   WHERE name = @loginName ) BEGIN
+SET @SQL = 'CREATE LOGIN [' + @loginName + '] FROM WINDOWS WITH DEFAULT_DATABASE=[master], DEFAULT_LANGUAGE=[русский]' PRINT 'Создана запись в AZRC ' + @loginName;
+
+EXEC sp_executeSQL @SQL END ELSE BEGIN PRINT 'Пользователь ' + @loginName + ' уже создан на сервере' END IF NOT EXISTS
+  (SELECT name
+   FROM sys.sysusers
+   WHERE name = @loginName ) BEGIN
+SET @SQL = 'CREATE USER [' + @loginName + '] FOR LOGIN [' + @loginName + ']' PRINT 'Создана запись в COMM_LOG ';
+
+EXEC sp_executeSQL @SQL END ELSE BEGIN PRINT 'Пользователь ' + @loginName + ' уже создан в базе' END PRINT '-----------------' FETCH NEXT
+FROM @tableCursor INTO @loginName;
+
+END --------------------------------------Курсор для создания ролей--------------------------------
+DECLARE @sql2 NVARCHAR(1000);
+
+DECLARE @roleName VARCHAR(50);
+
+DECLARE @Cursor2 AS
+CURSOR;
+
+DECLARE @tempTableOfRoles TABLE (rolename varchar(70))
+INSERT INTO @tempTableOfRoles
+VALUES ('districtUsers')
+SET @Cursor2 =
+CURSOR
+FOR
+SELECT *
+FROM @tempTableOfRoles OPEN @Cursor2;
+
+FETCH NEXT
+FROM @Cursor2 INTO @roleName;
+
+WHILE @@FETCH_STATUS = 0 BEGIN IF NOT EXISTS
+  (SELECT name
+   FROM sys.database_principals
+   WHERE TYPE = 'R'
+     AND name = @roleName ) BEGIN
+SET @SQL2 = 'use comm_log; CREATE ROLE [' + @roleName + '];
+ALTER ROLE [LITELOG] ADD MEMBER [' + @roleName + '];' PRINT 'Создана роль в AZRC: ' + @roleName;
+
+EXEC sp_executeSQL @SQL2 END ELSE BEGIN PRINT 'Роль [' + @roleName + '] уже создана на сервере' END FETCH NEXT
+FROM @Cursor2 INTO @roleName;
+
+END
+ALTER ROLE [districtUsers] ADD MEMBER [CORP\akbarova_ns] ------------------------------------------------------------------------------------------------------------------------------------
+ EXEC xp_cmdshell 'net localgroup Администраторы CORP\razuvaylo_ay /add' EXEC xp_cmdshell 'net localgroup Администраторы CORP\razuvaylo_ay /del'
